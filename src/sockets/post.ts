@@ -10,23 +10,18 @@ interface Post {
 const posts: Post[] = [];
 
 export function postsSocket(io: Server, socket: Socket) {
-  // Send all posts when user connects
   socket.emit("posts:init", posts);
 
-  // Create a new post
-  socket.on("create-post", (data: { title: string; description: string }) => {
-    if (!data.title || !data.description) return;
+  socket.on("create-post", (post: Post) => {
+    if (!post?.title || !post?.description) return;
 
-    const post: Post = {
-      id: crypto.randomUUID(),
-      title: data.title,
-      description: data.description,
-      time: new Date().toLocaleDateString(),
+    const newPost = {
+      ...post,
+      id: crypto.randomUUID(), // server owns ID
     };
 
-    posts.unshift(post);
+    posts.unshift(newPost);
 
-    // Broadcast to all clients
-    io.emit("new-post", post);
+    io.emit("new-post", newPost);
   });
 }
